@@ -1,0 +1,8 @@
+# throwaway kind cluster inside github actions, no ingress or monitoring there
+
+image:
+  repository: temp-converter
+  pullPolicy: Never
+
+networkPolicy:
+  enabled: false

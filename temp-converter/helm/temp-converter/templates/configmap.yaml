@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "temp-converter.name" . }}
+  labels:
+    {{- include "temp-converter.labels" . | nindent 4 }}
+data:
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  SHOW_FORMULA: {{ .Values.config.showFormula | quote }}
+  {{- if .Values.tracing.enabled }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.tracing.endpoint | quote }}
+  OTEL_SERVICE_NAME: temp-converter
+  {{- end }}

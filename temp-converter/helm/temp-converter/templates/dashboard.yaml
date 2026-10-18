@@ -1,0 +1,13 @@
+{{- if .Values.dashboard.enabled }}
+# grafana sidecar from kube-prometheus-stack picks up configmaps with this label
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "temp-converter.name" . }}-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  temp-converter.json: |-
+{{ .Files.Get "files/dashboard.json" | indent 4 }}
+{{- end }}

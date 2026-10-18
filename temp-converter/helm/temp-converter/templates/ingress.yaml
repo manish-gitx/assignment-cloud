@@ -1,0 +1,30 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "temp-converter.name" . }}
+  labels:
+    {{- include "temp-converter.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /convert
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "temp-converter.name" . }}
+                port:
+                  name: http
+          - path: /version
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "temp-converter.name" . }}
+                port:
+                  name: http
+{{- end }}

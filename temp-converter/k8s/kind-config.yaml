@@ -1,0 +1,16 @@
+# single node kind cluster, port 80 of the node is reachable on localhost:8080
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: temp-converter
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
