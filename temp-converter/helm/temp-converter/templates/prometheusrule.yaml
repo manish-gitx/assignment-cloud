@@ -1,0 +1,59 @@
+{{- if .Values.alerts.enabled }}
+# SLO: 99% of /convert requests do not fail with a 5xx and p95 latency stays under 200ms.
+# 4xx are not counted as errors, those are bad input from the user.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "temp-converter.name" . }}
+  labels:
+    {{- include "temp-converter.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: temp-converter
+      rules:
+        - record: tempconv:error_ratio:rate5m
+          expr: |
+            # "or vector(0)" so the ratio is 0 instead of empty when there are no 5xx at all
+            (sum(rate(tempconv_requests_total{status=~"5.."}[5m])) or vector(0))
+            /
+            clamp_min(sum(rate(tempconv_requests_total[5m])), 1e-9)
+
+        - record: tempconv:latency_p95:rate5m
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(tempconv_request_duration_seconds_bucket[5m])))
+
+        - alert: TempConvDown
+          expr: sum(up{service="{{ include "temp-converter.name" . }}"}) == 0 or absent(up{service="{{ include "temp-converter.name" . }}"})
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: No temp-converter pods are being scraped
+            runbook: "kubectl -n {{ .Release.Namespace }} get pods,events; check last helm release with helm history"
+
+        - alert: TempConvHighErrorRate
+          expr: tempconv:error_ratio:rate5m > 0.01
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: More than 1% of requests are failing with 5xx
+            runbook: "check logs for status>=500, if it started after a release run helm rollback"
+
+        - alert: TempConvSlow
+          expr: tempconv:latency_p95:rate5m > 0.2
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: p95 latency is above 200ms
+            runbook: "check cpu throttling and hpa, kubectl top pods"
+
+        - alert: TempConvRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", container="app"}[15m]) > 2
+          labels:
+            severity: warning
+          annotations:
+            summary: temp-converter pod restarted more than 2 times in 15 minutes
+            runbook: "kubectl describe pod, look at liveness probe failures and OOMKilled"
+{{- end }}
