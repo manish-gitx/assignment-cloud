@@ -1,0 +1,23 @@
+# local kind cluster with ingress, monitoring and jaeger installed (scripts/cluster-up.sh)
+
+image:
+  repository: temp-converter
+  pullPolicy: Never
+
+tracing:
+  enabled: true
+
+ingress:
+  enabled: true
+
+autoscaling:
+  enabled: true
+
+serviceMonitor:
+  enabled: true
+
+alerts:
+  enabled: true
+
+dashboard:
+  enabled: true

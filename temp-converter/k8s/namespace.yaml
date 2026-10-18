@@ -1,0 +1,8 @@
+# pod security admission blocks pods that dont meet the "restricted" profile
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: temp-converter
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
