@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+tests
+helm
+k8s
+monitoring
+scripts
+docs
+evidence
+*.md
